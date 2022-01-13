@@ -151,10 +151,6 @@
                 padding-bottom: 13px;
                 margin: 0;
                 table-layout: fixed;
-
-                div {
-                    margin: 0;
-                }
             }
 
             &.attachment__container--permalink {
@@ -232,6 +228,15 @@
                 padding-right: 0;
                 float: none;
                 word-wrap: break-word;
+            }
+
+            .permalink__body--opengraph {
+                line-height: 1.5em;
+                height: 1.5em;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                width: 100%;
             }
         }
 

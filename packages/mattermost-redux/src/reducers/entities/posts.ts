@@ -291,16 +291,21 @@ function handlePostReceived(nextState: any, post: Post) {
                 has_reactions: false,
             };
         }
-    } else {
-        if (post.metadata && post.metadata.embeds) {
-            post.metadata.embeds.forEach((embed) => {
-                if (embed.type === 'permalink') {
-                    if (embed.data && 'post_id' in embed.data && embed.data.post) {
+    } else if (post.metadata && post.metadata.embeds) {
+        post.metadata.embeds.forEach((embed) => {
+            if (embed.type === 'permalink') {
+                if (embed.data && 'post_id' in embed.data && embed.data.post) {
+                    if (nextState[embed.data.post_id]) {
                         nextState[embed.data.post_id] = removeUnneededMetadata(embed.data.post);
+                    } else {
+                        nextState[embed.data.post_id] = embed.data.post;
                     }
                 }
-            });
-        }
+            }
+        });
+
+        nextState[post.id] = post;
+    } else {
         nextState[post.id] = removeUnneededMetadata(post);
     }
 
@@ -1229,6 +1234,26 @@ function storeOpenGraphForPost(state: any, post: Post) {
     }
 
     return post.metadata.embeds.reduce((nextState, embed) => {
+        // TODO: Think about pulling duplicated logic into seperate function
+        // If post contains a permalink, we need to store opengraph data for the embedded message
+
+        if (embed.type === 'permalink' && embed.data && 'post' in embed.data && embed.data.post) {
+            const previewPost = embed.data.post;
+
+            if (previewPost.metadata && previewPost.metadata.embeds) {
+                return previewPost.metadata.embeds.reduce((nextState, embed) => {
+                    if (embed.type !== 'opengraph' || !embed.data || nextState[previewPost.id]) {
+                        return nextState;
+                    }
+
+                    return {
+                        ...nextState,
+                        [previewPost.id]: {[embed.url]: embed.data},
+                    };
+                }, nextState);
+            }
+        }
+
         if (embed.type !== 'opengraph' || !embed.data) {
             // Not an OpenGraph embed
             return nextState;

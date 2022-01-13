@@ -1,7 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React from 'react';
+import React, {useState} from 'react';
 
 import {FormattedMessage} from 'react-intl';
 
@@ -15,6 +15,9 @@ import PostMessageView from 'components/post_view/post_message_view';
 
 import Timestamp from 'components/timestamp';
 import PostAttachmentContainer from '../post_attachment_container/post_attachment_container';
+import FileAttachmentListContainer from 'components/file_attachment_list';
+import PostAttachmentOpenGraph from 'components/post_view/post_attachment_opengraph';
+
 import MattermostLogo from 'components/widgets/icons/mattermost_logo';
 import {Constants} from 'utils/constants';
 
@@ -24,10 +27,24 @@ export type Props = {
     metadata: PostPreviewMetadata;
     hasImageProxy: boolean;
     enablePostIconOverride: boolean;
+    isEmbedVisible: boolean;
+    compactDisplay: boolean;
+    actions: {
+        toggleEmbedVisibility: (id: string) => void;
+    };
 };
 
 const PostMessagePreview = (props: Props) => {
-    const {user, metadata, previewPost} = props;
+    const {user, metadata, isEmbedVisible, compactDisplay} = props;
+
+    const [previewPost] = useState(props.previewPost);
+    const [, setHandleFileDropdownOpened] = useState(false);
+
+    const toggleEmbedVisibility = () => {
+        if (previewPost) {
+            props.actions.toggleEmbedVisibility(previewPost.id);
+        }
+    };
 
     const getPostIconURL = (defaultURL: string, fromAutoResponder: boolean, fromWebhook: boolean): string => {
         const {enablePostIconOverride, hasImageProxy, previewPost} = props;
@@ -80,6 +97,38 @@ const PostMessagePreview = (props: Props) => {
         );
     }
 
+    let fileAttachmentPreview = null;
+
+    if (((previewPost.file_ids && previewPost.file_ids.length > 0) || (previewPost.filenames && previewPost.filenames.length > 0))) {
+        fileAttachmentPreview = (
+            <FileAttachmentListContainer
+                post={previewPost}
+                compactDisplay={compactDisplay}
+                isInPermalink={true}
+                handleFileDropdownOpened={setHandleFileDropdownOpened}
+            />
+        );
+    }
+
+    let urlPreview = null;
+
+    if (previewPost && previewPost.metadata && previewPost.metadata.embeds) {
+        const embed = previewPost.metadata.embeds[0];
+
+        if (embed && embed.type === 'opengraph') {
+            urlPreview = (
+                <PostAttachmentOpenGraph
+                    postId={previewPost.id}
+                    link={embed.url}
+                    isEmbedVisible={isEmbedVisible}
+                    post={previewPost}
+                    toggleEmbedVisibility={toggleEmbedVisibility}
+                    isInPermalink={true}
+                />
+            );
+        }
+    }
+
     return (
         <PostAttachmentContainer
             className='permalink'
@@ -122,6 +171,8 @@ const PostMessagePreview = (props: Props) => {
                     overflowType='ellipsis'
                     maxHeight={105}
                 />
+                {urlPreview}
+                {fileAttachmentPreview}
                 <div className='post__preview-footer'>
                     <p>
                         <FormattedMessage
