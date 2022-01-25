@@ -31,7 +31,7 @@ type Props = {
 function mapStateToProps(state: GlobalState, ownProps: Props) {
     const config = getConfig(state);
     let user = null;
-    let isEmbedVisibleBool = false;
+    let embedVisible = false;
     let previewPost = ownProps.previewPost;
 
     if (!previewPost) {
@@ -42,7 +42,7 @@ function mapStateToProps(state: GlobalState, ownProps: Props) {
         user = getUser(state, previewPost.user_id);
     }
     if (previewPost && previewPost.id) {
-        isEmbedVisibleBool = isEmbedVisible(state, previewPost.id);
+        embedVisible = isEmbedVisible(state, previewPost.id);
     }
 
     return {
@@ -50,7 +50,7 @@ function mapStateToProps(state: GlobalState, ownProps: Props) {
         enablePostIconOverride: config.EnablePostIconOverride === 'true',
         previewPost,
         user,
-        isEmbedVisible: isEmbedVisibleBool,
+        isEmbedVisible: embedVisible,
         compactDisplay: get(state, Preferences.CATEGORY_DISPLAY_SETTINGS, Preferences.MESSAGE_DISPLAY, Preferences.MESSAGE_DISPLAY_DEFAULT) === Preferences.MESSAGE_DISPLAY_COMPACT,
     };
 }

@@ -31,6 +31,11 @@ describe('PostMessagePreview', () => {
         user,
         hasImageProxy: false,
         enablePostIconOverride: false,
+        isEmbedVisible: false,
+        compactDisplay: false,
+        actions: {
+            toggleEmbedVisibility: jest.fn(),
+        },
     };
 
     test('should render correctly', () => {
